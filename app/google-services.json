@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "47781664906",
+    "firebase_url": "https://facilacesso-1508872030394.firebaseio.com",
+    "project_id": "facilacesso-1508872030394",
+    "storage_bucket": "facilacesso-1508872030394.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:47781664906:android:3c3143bd6cf95411",
+        "android_client_info": {
+          "package_name": "app.facilacesso"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "47781664906-6bdoe1d05r0c2bae1b16dfes7tc3b2sm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBu8JwoySRHxkgxomVqRK37goB9w511lFs"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

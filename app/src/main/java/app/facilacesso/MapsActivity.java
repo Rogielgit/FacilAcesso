@@ -10,9 +10,10 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -36,15 +37,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private LocationManager locationManager = null;
 
-    private Location location;
-
-    private GoogleApiClient mGoogleApiClient;
-
     private double latitude;
 
     private double longitude;
 
     private String provider;
+
+    private Button goAddVacancy;
 
 
     @Override
@@ -67,22 +66,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } catch (SecurityException e) {
             Log.e("RouteActivity", "Permission Error");
         }
+
+        goAddVacancy = (Button) findViewById(R.id.goAddVacancy);
+
+        goAddVacancy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent  i = new Intent(MapsActivity.this, AddVacancyByUser.class);
+                startActivity(i);
+
+            }
+        });
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        oldPosition = new LatLng(-22.007373, -47.894752); // change this later
+        oldPosition = new LatLng(-9.2384616, -38.1865609); // change this later
 
         if (newPosition != null)
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPosition, 15));
         else {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(oldPosition, 15));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(oldPosition, 5));
             mMap.addMarker(new MarkerOptions().position(oldPosition).title("Sua posicao"));
         }
     }
-
-
     /**
      * Called when the location has changed.
      * <p>
