@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -23,7 +22,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener {
+public class AddPointParking extends FragmentActivity implements OnMapReadyCallback, LocationListener {
 
     private static final String TAG = "TESTE>>>>>>>>>>>>>>>";
 
@@ -45,15 +44,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private Button goAddVacancy;
 
+    private ConnectBD connect;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
+        setContentView(R.layout.addvacancy);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+                .findFragmentById(R.id.mapPoint);
         mapFragment.getMapAsync(this);
+
+        connect = new ConnectBD();
+        connect.setInstanceBD();
+
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Criteria criteria = new Criteria();
@@ -69,14 +74,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         goAddVacancy = (Button) findViewById(R.id.goAddVacancy);
 
-        goAddVacancy.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent  i = new Intent(MapsActivity.this, AddPointParking.class);
-                startActivity(i);
-
-            }
-        });
+//        goAddVacancy.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Intent  i = new Intent(MapsActivity.this, ConnectBD.class);
+//                startActivity(i);
+//
+//            }
+//        });
     }
 
     @Override
@@ -91,6 +96,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mMap.addMarker(new MarkerOptions().position(oldPosition).title("Sua posicao"));
         }
     }
+
     /**
      * Called when the location has changed.
      * <p>
@@ -106,7 +112,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void updateLocation(Location location) {
         newPosition = new LatLng(location.getLatitude(), location.getLongitude());
-
+        connect.writeNewPosition(location.getLatitude(), location.getLongitude());
         if (youPosition != null)
             youPosition.setPosition(newPosition);
 
