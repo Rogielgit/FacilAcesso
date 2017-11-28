@@ -74,7 +74,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onClick(View v) {
                 Intent  i = new Intent(MapsActivity.this, AddPointParking.class);
                 startActivity(i);
-
             }
         });
     }

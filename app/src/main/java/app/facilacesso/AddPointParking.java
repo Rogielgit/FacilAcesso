@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -42,7 +43,7 @@ public class AddPointParking extends FragmentActivity implements OnMapReadyCallb
 
     private String provider;
 
-    private Button goAddVacancy;
+    private Button addVacancy;
 
     private ConnectBD connect;
 
@@ -72,16 +73,15 @@ public class AddPointParking extends FragmentActivity implements OnMapReadyCallb
             Log.e("RouteActivity", "Permission Error");
         }
 
-        goAddVacancy = (Button) findViewById(R.id.goAddVacancy);
+        addVacancy = (Button) findViewById(R.id.addVacancy);
 
-//        goAddVacancy.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Intent  i = new Intent(MapsActivity.this, ConnectBD.class);
-//                startActivity(i);
-//
-//            }
-//        });
+        addVacancy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                connect.writeNewPosition(latitude, longitude);
+
+            }
+        });
     }
 
     @Override
@@ -111,8 +111,10 @@ public class AddPointParking extends FragmentActivity implements OnMapReadyCallb
     }
 
     private void updateLocation(Location location) {
-        newPosition = new LatLng(location.getLatitude(), location.getLongitude());
-        connect.writeNewPosition(location.getLatitude(), location.getLongitude());
+        latitude = location.getLatitude();
+        longitude = location.getLongitude();
+
+        newPosition = new LatLng(latitude, longitude);
         if (youPosition != null)
             youPosition.setPosition(newPosition);
 
