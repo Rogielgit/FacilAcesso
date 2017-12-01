@@ -23,11 +23,15 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.List;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener {
 
     private static final String TAG = "TESTE>>>>>>>>>>>>>>>";
 
     private GoogleMap mMap;
+
+    private Marker marker;
 
     private LatLng newPosition = null;
 
@@ -45,6 +49,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private Button goAddVacancy;
 
+    private ConnectBD connectBD;
+
+    private int flag = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +62,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        connectBD = new ConnectBD();
+        connectBD.setInstanceBD();
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Criteria criteria = new Criteria();
@@ -76,19 +87,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 startActivity(i);
             }
         });
-    }
 
+    }
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         oldPosition = new LatLng(-9.2384616, -38.1865609); // change this later
 
         if (newPosition != null)
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPosition, 15));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPosition, 5));
         else {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(oldPosition, 15));
-            mMap.addMarker(new MarkerOptions().position(oldPosition).title("Sua posicao"));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(oldPosition, 5));
+           marker =  mMap.addMarker(new MarkerOptions().position(oldPosition).title("Sua posicao"));
         }
+        if(flag ==1)
+            setAllParkingToUser();
+
+
     }
     /**
      * Called when the location has changed.
@@ -104,14 +119,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void updateLocation(Location location) {
+
+        if (flag == 0) {
+            setAllParkingToUser();
+            flag = 1;
+        }
+
         newPosition = new LatLng(location.getLatitude(), location.getLongitude());
 
         if (youPosition != null)
             youPosition.setPosition(newPosition);
 
-        mMap.clear();
+   //     mMap.clear();
+        marker.remove();
         CameraUpdate update = CameraUpdateFactory.newLatLng(newPosition);
-        mMap.addMarker(new MarkerOptions().position(newPosition).title("Sua posicao"));
+        marker = mMap.addMarker(new MarkerOptions().position(newPosition).title("Sua posicao"));
         mMap.animateCamera(update);
     }
 
@@ -167,6 +189,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onProviderDisabled(String provider) {
         Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
         startActivity(intent);
+    }
+
+    public void setAllParkingToUser(){
+        List <PointParking> positionsBD = connectBD.getAllPositionFromDataBase();
+
+        for (PointParking points : positionsBD) {
+            LatLng positions = new LatLng(points.getLatitude(), points.getLongitude());
+            mMap.addMarker(new MarkerOptions().position(positions).title("Vaga"));
+        }
     }
 }
 

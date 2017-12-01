@@ -20,9 +20,24 @@ public class PointParking {
         this.latitude = latitude;
         this.longitude = longitude;
     }
+
+    public void setPosition (Double latitude, Double longitude)
+    {
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+    public double getLatitude()
+    {
+        return this.latitude;
+    }
+    public double getLongitude()
+    {
+        return this.longitude;
+    }
     public void setNamePoint(String namePoint){
         this.namePoint = namePoint;
     }
+
     public void setImag(){
 
     }
