@@ -1,8 +1,12 @@
 package app.facilacesso;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.location.Address;
 import android.location.Criteria;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -22,6 +26,10 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 public class AddPointParking extends FragmentActivity implements OnMapReadyCallback, LocationListener {
 
@@ -47,19 +55,18 @@ public class AddPointParking extends FragmentActivity implements OnMapReadyCallb
 
     private ConnectBD connect;
 
+    private String nameCity = "";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.addvacancy);
+        connect = new ConnectBD();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.mapPoint);
         mapFragment.getMapAsync(this);
-
-        connect = new ConnectBD();
-        connect.setInstanceBD();
-
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Criteria criteria = new Criteria();
@@ -68,7 +75,7 @@ public class AddPointParking extends FragmentActivity implements OnMapReadyCallb
         try {
             locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, this, null);
             locationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER, 2000, 1, this);
+                    LocationManager.GPS_PROVIDER, 0, 0, this);
         } catch (SecurityException e) {
             Log.e("RouteActivity", "Permission Error");
         }
@@ -78,8 +85,25 @@ public class AddPointParking extends FragmentActivity implements OnMapReadyCallb
         addVacancy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                connect.writeNewPosition(latitude, longitude);
 
+                final AlertDialog.Builder builder = new AlertDialog.Builder(AddPointParking.this);
+
+                builder.setMessage("Você realmente gostaria de tornar essa vaga visível para outras pessoas?")
+                        .setPositiveButton("sim", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                connect.writeNewPosition(latitude, longitude);
+                                Intent i = new Intent(AddPointParking.this, MapsActivity.class);
+                                startActivity(i);
+                            }
+                        }).setNegativeButton("Não", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent i = new Intent(AddPointParking.this, MapsActivity.class);
+                        startActivity(i);
+                    }
+                });
+                builder.create().show();
             }
         });
     }
@@ -87,13 +111,31 @@ public class AddPointParking extends FragmentActivity implements OnMapReadyCallb
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        oldPosition = new LatLng(-9.2384616, -38.1865609); // change this later
+        Intent i = getIntent();
+        LatLng positionUser = i.getParcelableExtra("positionUser");
+        String nameCity = i.getStringExtra("City");
+        connect.setInstanceBD(nameCity);
 
+        latitude = positionUser.latitude;
+        longitude = positionUser.longitude;
+
+
+        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+
+                Location location = new Location(LocationManager.GPS_PROVIDER);
+                location.setLatitude(latLng.latitude);
+                location.setLongitude(latLng.longitude);
+
+                updateLocation(location);
+            }
+        });
         if (newPosition != null)
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPosition, 15));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPosition, 20));
         else {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(oldPosition, 15));
-            mMap.addMarker(new MarkerOptions().position(oldPosition).title("Sua posicao"));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(positionUser, 20));
+            mMap.addMarker(new MarkerOptions().position(positionUser).title("Sua posicao"));
         }
     }
 
@@ -114,13 +156,26 @@ public class AddPointParking extends FragmentActivity implements OnMapReadyCallb
         latitude = location.getLatitude();
         longitude = location.getLongitude();
 
+        Geocoder gcd = new Geocoder(getBaseContext(), Locale.getDefault());
+        List<Address> addresses = null;
+        try {
+            addresses = gcd.getFromLocation(latitude, longitude, 1);
+            String address = addresses.get(0).getLocality();
+            if (!nameCity.equals(address)){
+                connect.setInstanceBD(address);
+                nameCity = address;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         newPosition = new LatLng(latitude, longitude);
         if (youPosition != null)
             youPosition.setPosition(newPosition);
 
         mMap.clear();
-        CameraUpdate update = CameraUpdateFactory.newLatLng(newPosition);
-        mMap.addMarker(new MarkerOptions().position(newPosition).title("Sua posicao"));
+        CameraUpdate update = CameraUpdateFactory.newLatLngZoom(newPosition,20);
+        mMap.addMarker(new MarkerOptions().position(newPosition).title("Nova vaga?"));
         mMap.animateCamera(update);
     }
 

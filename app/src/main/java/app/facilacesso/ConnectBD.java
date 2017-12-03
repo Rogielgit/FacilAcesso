@@ -21,26 +21,12 @@ public class ConnectBD {
 
     private List<PointParking> pointsParkings;
 
-    public void setInstanceBD() {
-        pointsParkings = new ArrayList<>();
-        mDatabase = FirebaseDatabase.getInstance().getReference("position"); //need this to read e write at database
-        mDatabase.getDatabase();
-        mDatabase.addValueEventListener(new ValueEventListener() {
-
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                final String userId = getUid();
-                for (DataSnapshot point : dataSnapshot.getChildren()) {
-                    pointsParkings.add(point.getValue(PointParking.class));
-                }
-                setAllPositionFromDataBase(pointsParkings);
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
-        });
+    public void setInstanceBD(String address) {
+        mDatabase = FirebaseDatabase.getInstance().getReference(address); //need this to read e write at database
     }
-
+    public DatabaseReference getInstanceBD(){
+        return mDatabase;
+    }
     public void writeNewPosition(double latitude, double longitude) {
         final String userId = getUid();
         PointParking pointParking = new PointParking(latitude, longitude);
@@ -54,12 +40,24 @@ public class ConnectBD {
         this.pointsParkings = points;
     }
 
-    public List<PointParking> getAllPositionFromDataBase() {
-        for (PointParking points : pointsParkings) {
-            Log.d("Agora->>", points.getLatitude() + "->>" + points.getLongitude());
-        }
-        return pointsParkings;
+    public void listenerDB(){
+        pointsParkings = new ArrayList<>();
+        final String userId = getUid();
+        mDatabase.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot point : dataSnapshot.getChildren()) {
+                    pointsParkings.add(point.getValue(PointParking.class));
+                }
+                setAllPositionFromDataBase(pointsParkings);
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
     }
+
+    public List<PointParking> getAllPositionFromDataBase() {return pointsParkings;}
 
     public String getUid() {
         return mDatabase.push().getKey();

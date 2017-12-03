@@ -2,7 +2,9 @@ package app.facilacesso;
 
 import android.content.Context;
 import android.content.Intent;
+import android.location.Address;
 import android.location.Criteria;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -19,11 +21,19 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener {
 
@@ -51,7 +61,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private ConnectBD connectBD;
 
-    private int flag = 0;
+    private List<PointParking> pointsParkings;
+
+    private String nameCity = "";
+
+    private DatabaseReference mDatabase;
 
 
     @Override
@@ -64,16 +78,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
         connectBD = new ConnectBD();
-        connectBD.setInstanceBD();
+        pointsParkings = new ArrayList<>();
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Criteria criteria = new Criteria();
         criteria.setAccuracy(Criteria.ACCURACY_FINE);
         provider = locationManager.getBestProvider(criteria, true);
+
         try {
-            locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, this, null);
+            locationManager.requestSingleUpdate(criteria, this, null);
             locationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER, 2000, 1, this);
+                    LocationManager.GPS_PROVIDER, 0, 0, this);
+
         } catch (SecurityException e) {
             Log.e("RouteActivity", "Permission Error");
         }
@@ -83,28 +99,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         goAddVacancy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent  i = new Intent(MapsActivity.this, AddPointParking.class);
+                Intent i = new Intent(MapsActivity.this, AddPointParking.class);
+                if(newPosition != null) {
+                    i.putExtra("positionUser", newPosition);
+                    i.putExtra("City", nameCity);
+                }
                 startActivity(i);
             }
         });
-
     }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         oldPosition = new LatLng(-9.2384616, -38.1865609); // change this later
 
         if (newPosition != null)
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPosition, 5));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPosition, 10));
         else {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(oldPosition, 5));
-           marker =  mMap.addMarker(new MarkerOptions().position(oldPosition).title("Sua posicao"));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(oldPosition, 10));
+            marker = mMap.addMarker(new MarkerOptions().position(oldPosition).title("Sua posicao"));
         }
-        if(flag ==1)
-            setAllParkingToUser();
-
-
     }
+
     /**
      * Called when the location has changed.
      * <p>
@@ -114,23 +131,45 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     @Override
     public void onLocationChanged(Location location) {
+
         updateLocation(location);
         Log.i(TAG, "Latitude: " + latitude + ", Longitude: " + longitude);
     }
 
     private void updateLocation(Location location) {
+        latitude = location.getLatitude();
+        longitude = location.getLongitude();
 
-        if (flag == 0) {
-            setAllParkingToUser();
-            flag = 1;
+        Geocoder gcd = new Geocoder(getBaseContext(), Locale.getDefault());
+        List<Address> addresses = null;
+        try {
+            addresses = gcd.getFromLocation(latitude, longitude, 1);
+            String address = addresses.get(0).getLocality();
+            if (!nameCity.equals(address)) {
+                connectBD.setInstanceBD(address);
+                mDatabase = connectBD.getInstanceBD();
+                nameCity = address;
+                mDatabase.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        for (DataSnapshot point : dataSnapshot.getChildren()) {
+                            pointsParkings.add(point.getValue(PointParking.class));
+                        }
+                        showAllParkingToUser();
+                    }
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                    }
+                });
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-        newPosition = new LatLng(location.getLatitude(), location.getLongitude());
+        newPosition = new LatLng(latitude, longitude);
 
         if (youPosition != null)
             youPosition.setPosition(newPosition);
 
-   //     mMap.clear();
         marker.remove();
         CameraUpdate update = CameraUpdateFactory.newLatLng(newPosition);
         marker = mMap.addMarker(new MarkerOptions().position(newPosition).title("Sua posicao"));
@@ -191,12 +230,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         startActivity(intent);
     }
 
-    public void setAllParkingToUser(){
-        List <PointParking> positionsBD = connectBD.getAllPositionFromDataBase();
+    public void showAllParkingToUser() {
+     //   List<PointParking> positionsBD = connectBD.getAllPositionFromDataBase();
 
-        for (PointParking points : positionsBD) {
+        for (PointParking points : pointsParkings) {
             LatLng positions = new LatLng(points.getLatitude(), points.getLongitude());
-            mMap.addMarker(new MarkerOptions().position(positions).title("Vaga"));
+            mMap.addMarker(new MarkerOptions().position(positions).title("Vaga")
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.logomarker)
+                    ));
         }
     }
 }
