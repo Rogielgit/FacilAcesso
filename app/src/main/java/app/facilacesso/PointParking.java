@@ -1,5 +1,7 @@
 package app.facilacesso;
 
+import android.graphics.Bitmap;
+
 /**
  * Created by computeiro on 22/11/17.
  */
@@ -12,13 +14,16 @@ public class PointParking {
 
     public String namePoint;
 
+    public Bitmap bitmap;
+
     public PointParking(){
 
     }
 
-    public PointParking(Double latitude, Double longitude){
+    public PointParking(Double latitude, Double longitude, Bitmap bitmap){
         this.latitude = latitude;
         this.longitude = longitude;
+       // this.bitmap = bitmap;
     }
 
     public void setPosition (Double latitude, Double longitude)
@@ -38,8 +43,12 @@ public class PointParking {
         this.namePoint = namePoint;
     }
 
-    public void setImag(){
-
+    public void setImag(Bitmap bitmap){
+        this.bitmap = bitmap;
+    }
+    public Bitmap getImage()
+    {
+        return bitmap;
     }
 
 

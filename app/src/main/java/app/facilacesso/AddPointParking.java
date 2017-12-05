@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.location.Address;
 import android.location.Criteria;
 import android.location.Geocoder;
@@ -11,11 +12,14 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdate;
@@ -31,7 +35,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
-public class AddPointParking extends FragmentActivity implements OnMapReadyCallback, LocationListener {
+public class AddPointParking extends AppCompatActivity implements OnMapReadyCallback, LocationListener {
 
     private static final String TAG = "TESTE>>>>>>>>>>>>>>>";
 
@@ -56,6 +60,12 @@ public class AddPointParking extends FragmentActivity implements OnMapReadyCallb
     private ConnectBD connect;
 
     private String nameCity = "";
+
+    private Button takepicture;
+
+    private ImageView imageView;
+
+    private Bitmap picturelocal;
 
 
     @Override
@@ -87,14 +97,17 @@ public class AddPointParking extends FragmentActivity implements OnMapReadyCallb
             public void onClick(View v) {
 
                 final AlertDialog.Builder builder = new AlertDialog.Builder(AddPointParking.this);
-
                 builder.setMessage("Você realmente gostaria de tornar essa vaga visível para outras pessoas?")
                         .setPositiveButton("sim", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                connect.writeNewPosition(latitude, longitude);
-                                Intent i = new Intent(AddPointParking.this, MapsActivity.class);
-                                startActivity(i);
+
+                                if (newPosition != null) {
+                                    connect.writeNewPosition(latitude, longitude, picturelocal);
+                                    Intent i = new Intent(AddPointParking.this, MapsActivity.class);
+                                    startActivity(i);
+                                }
+
                             }
                         }).setNegativeButton("Não", new DialogInterface.OnClickListener() {
                     @Override
@@ -106,8 +119,38 @@ public class AddPointParking extends FragmentActivity implements OnMapReadyCallb
                 builder.create().show();
             }
         });
+
+
+        imageView = (ImageView) findViewById(R.id.foto);
+        takepicture = (Button) findViewById(R.id.idpicture);
+
+
+        //Botao de tirar foto
+        takepicture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                if (takePicture.resolveActivity(getPackageManager()) != null) {
+                    startActivityForResult(takePicture, 1);
+                }
+            }
+        });
     }
 
+    //Printa Thumbnail da foto tirada no app
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        //super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1) {
+            if (resultCode == RESULT_OK) {
+                Bitmap foto = (Bitmap) data.getExtras().get("data");
+                imageView.setImageBitmap(foto);
+                picturelocal = foto;
+                addVacancy.setEnabled(true);
+            }
+        }
+    }
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -148,8 +191,8 @@ public class AddPointParking extends FragmentActivity implements OnMapReadyCallb
      */
     @Override
     public void onLocationChanged(Location location) {
-        updateLocation(location);
-        Log.i(TAG, "Latitude: " + latitude + ", Longitude: " + longitude);
+      ///  updateLocation(location);
+        //Log.i(TAG, "Latitude: " + latitude + ", Longitude: " + longitude);
     }
 
     private void updateLocation(Location location) {

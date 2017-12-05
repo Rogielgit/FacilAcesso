@@ -1,5 +1,6 @@
 package app.facilacesso;
 
+import android.graphics.Bitmap;
 import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
@@ -27,9 +28,9 @@ public class ConnectBD {
     public DatabaseReference getInstanceBD(){
         return mDatabase;
     }
-    public void writeNewPosition(double latitude, double longitude) {
+    public void writeNewPosition(double latitude, double longitude, Bitmap picture) {
         final String userId = getUid();
-        PointParking pointParking = new PointParking(latitude, longitude);
+        PointParking pointParking = new PointParking(latitude, longitude, picture);
         mDatabase.child(userId).setValue(pointParking);
     }
 

@@ -8,13 +8,17 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.support.v4.app.FragmentActivity;
+import android.support.annotation.RequiresApi;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -35,7 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener {
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, LocationListener {
 
     private static final String TAG = "TESTE>>>>>>>>>>>>>>>";
 
@@ -67,12 +71,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private DatabaseReference mDatabase;
 
+   private Toolbar toolbar;
 
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+
+        ///toolbar = (Toolbar) findViewById(R.id.toolbar);
+       // setSupportActionBar(toolbar);
+        
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -99,27 +110,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         goAddVacancy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 Intent i = new Intent(MapsActivity.this, AddPointParking.class);
                 if(newPosition != null) {
                     i.putExtra("positionUser", newPosition);
                     i.putExtra("City", nameCity);
+                    startActivity(i);
                 }
-                startActivity(i);
+                else {
+                    Toast.makeText(getBaseContext(), "Ops! Não foi possível achar a sua localização",
+                            Toast.LENGTH_LONG).show();
+                }
+
             }
         });
     }
+
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        // Inflate the menu; this adds items to the action bar if it is present.
+//        getMenuInflater().inflate(R.menu.menu, menu);
+//        return true;
+//    }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         oldPosition = new LatLng(-9.2384616, -38.1865609); // change this later
-
         if (newPosition != null)
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPosition, 10));
-        else {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(oldPosition, 10));
-            marker = mMap.addMarker(new MarkerOptions().position(oldPosition).title("Sua posicao"));
-        }
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPosition, 17));
+        else
+            marker = mMap.addMarker(new MarkerOptions().position(oldPosition).title("Sua posicao").visible(false));
     }
 
     /**
@@ -171,7 +192,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             youPosition.setPosition(newPosition);
 
         marker.remove();
-        CameraUpdate update = CameraUpdateFactory.newLatLng(newPosition);
+        CameraUpdate update = CameraUpdateFactory.newLatLngZoom(newPosition,17);
         marker = mMap.addMarker(new MarkerOptions().position(newPosition).title("Sua posicao"));
         mMap.animateCamera(update);
     }
@@ -231,8 +252,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void showAllParkingToUser() {
-     //   List<PointParking> positionsBD = connectBD.getAllPositionFromDataBase();
-
         for (PointParking points : pointsParkings) {
             LatLng positions = new LatLng(points.getLatitude(), points.getLongitude());
             mMap.addMarker(new MarkerOptions().position(positions).title("Vaga")
@@ -240,6 +259,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     ));
         }
     }
+
+
 }
 
 

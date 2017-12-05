@@ -2,20 +2,50 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:gravity="center"
+    android:orientation="vertical"
+
+    >
 
     <fragment
         android:id="@+id/mapPoint"
         android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="380dp"
+        android:layout_width="match_parent"
         android:layout_height="800px"
+        android:layout_weight="1"
         tools:context="app.facilacesso.PointParking" />
 
+    <ImageView
+        android:id="@+id/foto"
+        android:layout_width="match_parent"
+        android:layout_height="127dp"
+        android:layout_gravity="center" />
 
-    <Button
-        android:id="@+id/addVacancy"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Add Ponto" />
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/idpicture"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/formatbutton"
+            android:padding="10dp"
+            android:text="adicionar foto"
+            android:textColor="#fff" />
+
+        <Button
+            android:id="@+id/addVacancy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/formatbutton"
+            android:enabled="false"
+            android:padding="10dp"
+            android:layout_marginLeft="10dp"
+            android:text="adicionar vaga"
+            android:textColor="#fff" />
+
+    </LinearLayout>
 
 </LinearLayout>

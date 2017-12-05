@@ -5,7 +5,23 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    >
+    android:weightSum="1">
+
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+           >
+
+                <Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    />
+
+        </LinearLayout>
+
 
         <fragment
             android:id="@+id/map"

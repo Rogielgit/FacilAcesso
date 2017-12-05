@@ -16,7 +16,7 @@ public class InitialScreen extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.initialscreen);
 
-        int secondsDelayed = 4;
+        int secondsDelayed = 8;
         new Handler().postDelayed(new Runnable() {
             public void run() {
                 startActivity(new Intent(InitialScreen.this,  MapsActivity.class));
